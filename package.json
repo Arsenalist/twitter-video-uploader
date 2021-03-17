@@ -1,0 +1,17 @@
+{
+  "name": "twitter-video-upload",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-watch": "^0.7.1",
+    "prompt": "^1.1.0",
+    "request": "^2.88.2"
+  }
+}
