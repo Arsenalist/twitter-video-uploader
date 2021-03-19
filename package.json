@@ -12,6 +12,7 @@
   "dependencies": {
     "node-watch": "^0.7.1",
     "prompt": "^1.1.0",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "slugify": "^1.4.7"
   }
 }

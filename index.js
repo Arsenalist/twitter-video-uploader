@@ -198,20 +198,30 @@ VideoTweet.prototype.tweet = function () {
   });
 }
 var path = require('path')
+var fs = require('fs');
 var watch = require('node-watch');
 var prompt = require('prompt');
+var slugify = require('slugify')
 const watchDirectory = "C:\\Users\\zarar\\Videos\\OBS"
-watch(watchDirectory, { recursive: false }, function(evt, name) {
+watch(watchDirectory, { recursive: false, filter: function(f, skip) {
+    if (/tweets/.test(f)) return skip;
+    return true
+  } }, function(evt, name) {
+  console.log(evt, name)
   if (evt === "update") {
     prompt.start();
     prompt.get(['tweet'], function (err, result) {
-//      const tweet = path.basename(name).split('.').slice(0, -1).join('.')
       if (result.tweet) {
         videoTweet = new VideoTweet({
           file_path: name,
           tweet_text: result.tweet
         });
-
+        const newName = `${path.dirname(name)}/tweets/${slugify(result.tweet)}${path.extname(name)}`;
+        fs.copyFile(name, newName, function(err) {
+          if (err) {
+            console.log("error copying file ", err)
+          }
+        })
       } else {
         console.log("ignoring...")
       }
