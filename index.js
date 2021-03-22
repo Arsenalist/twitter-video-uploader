@@ -203,11 +203,12 @@ var watch = require('node-watch');
 var prompt = require('prompt');
 var slugify = require('slugify')
 const watchDirectory = "C:\\Users\\zarar\\Videos\\OBS"
+const { exec } = require("child_process");
+const ffmpeg = "C:\\Users\\zarar\\Tools\\ffmpeg\\bin\\ffmpeg.exe"
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     if (/tweets/.test(f)) return skip;
     return true
   } }, function(evt, name) {
-  console.log(evt, name)
   if (evt === "update") {
     prompt.start();
     prompt.get(['tweet'], function (err, result) {
@@ -217,6 +218,19 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
           tweet_text: result.tweet
         });
         const newName = `${path.dirname(name)}/tweets/${slugify(result.tweet)}${path.extname(name)}`;
+        const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(result.tweet)}${path.extname(name)}`;
+        exec(`${ffmpeg} -i ${name} -c copy -an ${newNameNoAudio}`, (error, stdout, stderr) => {
+          if (error) {
+            console.log(`error: ${error.message}`);
+            return;
+          }
+          if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+          }
+          console.log(`stdout: ${stdout}`);
+        });
+
         fs.copyFile(name, newName, function(err) {
           if (err) {
             console.log("error copying file ", err)
