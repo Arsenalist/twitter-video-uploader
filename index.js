@@ -6,10 +6,6 @@ var MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
 var POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
 
 var OAUTH = {
-  consumer_key: '',
-  consumer_secret: '',
-  token: '',
-  token_secret: ''
 }
 
 
@@ -197,6 +193,7 @@ VideoTweet.prototype.tweet = function () {
 
   });
 }
+
 var path = require('path')
 var fs = require('fs');
 var watch = require('node-watch');
@@ -205,44 +202,123 @@ var slugify = require('slugify')
 const watchDirectory = "C:\\Users\\zarar\\Videos\\OBS"
 const { exec } = require("child_process");
 const ffmpeg = "C:\\Users\\zarar\\Tools\\ffmpeg\\bin\\ffmpeg.exe"
+
+
+var WebSocketServer = require('websocket').server;
+var http = require('http');
+
+var server = http.createServer(function(request, response) {
+  console.log((new Date()) + ' Received request for ' + request.url);
+  response.writeHead(404);
+  response.end();
+});
+server.listen(8888, function() {
+  console.log((new Date()) + ' Server is listening on port 8888');
+});
+
+wsServer = new WebSocketServer({
+  httpServer: server,
+  // You should not use autoAcceptConnections for production
+  // applications, as it defeats all standard cross-origin protection
+  // facilities built into the protocol and the browser.  You should
+  // *always* verify the connection's origin and decide whether or not
+  // to accept it.
+  autoAcceptConnections: false
+});
+
+function originIsAllowed(origin) {
+  // put logic here to detect whether the specified origin is allowed.
+  return true;
+}
+var connection
+
+function processTweet(name, tweet) {
+  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
+  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
+  new VideoTweet({
+    file_path: name,
+    tweet_text: tweet
+  });
+  exec(`${ffmpeg} -i ${name} -c copy -an ${newNameNoAudio}`, (error, stdout, stderr) => {
+    if (error) {
+      console.log(`error: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.log(`stderr: ${stderr}`);
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+  });
+
+  fs.copyFile(name, newName, function (err) {
+    if (err) {
+      console.log("error copying file ", err)
+    }
+  })
+}
+
+wsServer.on('request', function(request) {
+  if (!originIsAllowed(request.origin)) {
+    // Make sure we only accept requests from an allowed origin
+    request.reject();
+    console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+    return;
+  }
+
+  connection = request.accept('echo-protocol', request.origin);
+  console.log((new Date()) + ' Connection accepted.');
+  connection.on('message', function(message) {
+    console.log("message is ", message)
+    const data = JSON.parse(message.utf8Data)
+    if (message.type === 'utf8') {
+      if (data.action === "saveVideo") {
+        var robot = require("robotjs");
+        robot.keyTap("s", ["control", "shift"]);
+      } else if (data.action === "sendTweet") {
+        processTweet(data.id, data.text);
+      }
+    }
+  });
+  connection.on('close', function(reasonCode, description) {
+    console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+  });
+});
+
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const argv = require('yargs/yargs')(process.argv.slice(2))
+    .boolean(['r'])
+    .argv
+;
+let remote = false
+if (argv.r) {
+  remote = true
+}
+console.log("remote is ", remote)
+
+
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     if (/tweets/.test(f)) return skip;
     return true
   } }, function(evt, name) {
   if (evt === "update") {
-    prompt.start();
-    prompt.get(['tweet'], function (err, result) {
-      if (result.tweet) {
-        videoTweet = new VideoTweet({
-          file_path: name,
-          tweet_text: result.tweet
-        });
-        const newName = `${path.dirname(name)}/tweets/${slugify(result.tweet)}${path.extname(name)}`;
-        const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(result.tweet)}${path.extname(name)}`;
-        exec(`${ffmpeg} -i ${name} -c copy -an ${newNameNoAudio}`, (error, stdout, stderr) => {
-          if (error) {
-            console.log(`error: ${error.message}`);
-            return;
-          }
-          if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return;
-          }
-          console.log(`stdout: ${stdout}`);
-        });
-
-        fs.copyFile(name, newName, function(err) {
-          if (err) {
-            console.log("error copying file ", err)
-          }
-        })
-      } else {
-        console.log("ignoring...")
-      }
-    });
+    if (remote) {
+      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name}));
+    } else {
+      prompt.start();
+      prompt.get(['tweet'], function (err, result) {
+        if (result.tweet) {
+          processTweet(name, result.tweet)
+        } else {
+          console.log("ignoring...")
+        }
+      });
+    }
   }
 
 });
+
 
 /**
  * Instantiates a VideoTweet
