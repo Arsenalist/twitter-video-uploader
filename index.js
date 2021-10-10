@@ -1,11 +1,17 @@
 var request = require('request');
-var fs = require('fs');
+const fs = require('fs');
+const toml = require('toml');
+const tomlData = toml.parse(fs.readFileSync('config.toml'));
 
 
 var MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
 var POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
 
 var OAUTH = {
+  consumer_key: tomlData.twitter.consumer_key,
+  consumer_secret: tomlData.twitter.consumer_secret,
+  token: tomlData.twitter.token,
+  token_secret: tomlData.twitter.token_secret
 }
 
 
@@ -193,15 +199,14 @@ VideoTweet.prototype.tweet = function () {
   });
 }
 
-var path = require('path')
-var fs = require('fs');
-var watch = require('node-watch');
-var prompt = require('prompt');
-var slugify = require('slugify')
-const watchDirectory = "C:\\Users\\zarar\\Videos\\OBS"
-const { exec, execSync } = require("child_process");
-const ffmpeg = "C:\\Users\\zarar\\Tools\\ffmpeg\\bin\\ffmpeg.exe"
+const path = require('path');
+const watch = require('node-watch');
+const slugify = require('slugify');
 
+const { exec  } = require("child_process");
+
+const ffmpeg = tomlData.ffmpeg_binary;
+const watchDirectory = tomlData.obs_watch_dir;
 
 var WebSocketServer = require('websocket').server;
 var http = require('http');
@@ -303,35 +308,19 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
     .boolean(['r'])
     .argv
 ;
-let remote = true
-if (argv.r) {
-  remote = true
-}
-console.log("remote is ", remote)
-
 
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     if (/tweets|thumbs/.test(f)) return skip;
+    if (!path.basename(f).startsWith("Replay_")) {
+      return skip
+    }
     return true
   } }, function(evt, name) {
 
   if (evt === "update") {
-    if (remote) {
       let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
       fs.copyFileSync(name, thumb)
-    console.log("thumb to upload is ", thumb)
       connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
-
-    } else {
-      prompt.start();
-      prompt.get(['tweet'], function (err, result) {
-        if (result.tweet) {
-          processTweet(name, result.tweet)
-        } else {
-          console.log("ignoring...")
-        }
-      });
-    }
   }
 });
 
