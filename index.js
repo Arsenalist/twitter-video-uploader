@@ -121,7 +121,6 @@ VideoTweet.prototype.upload_finalize = function () {
 
     data = JSON.parse(body)
     self.check_status(data.processing_info);
-    console.log("done")
   });
 }
 
@@ -200,7 +199,7 @@ var watch = require('node-watch');
 var prompt = require('prompt');
 var slugify = require('slugify')
 const watchDirectory = "C:\\Users\\zarar\\Videos\\OBS"
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 const ffmpeg = "C:\\Users\\zarar\\Tools\\ffmpeg\\bin\\ffmpeg.exe"
 
 
@@ -232,13 +231,7 @@ function originIsAllowed(origin) {
 }
 var connection
 
-function processTweet(name, tweet) {
-  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
-  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
-  new VideoTweet({
-    file_path: name,
-    tweet_text: tweet
-  });
+function saveWithNewName(name, newNameNoAudio, newName) {
   exec(`${ffmpeg} -i ${name} -c copy -an ${newNameNoAudio}`, (error, stdout, stderr) => {
     if (error) {
       console.log(`error: ${error.message}`);
@@ -258,6 +251,24 @@ function processTweet(name, tweet) {
   })
 }
 
+function saveForLater(name, tweet) {
+  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
+  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
+  saveWithNewName(name, newNameNoAudio, newName);
+}
+
+
+function processTweet(name, tweet) {
+  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
+  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
+
+  new VideoTweet({
+    file_path: name,
+    tweet_text: tweet
+  });
+  saveWithNewName(name, newNameNoAudio, newName);
+}
+
 wsServer.on('request', function(request) {
   if (!originIsAllowed(request.origin)) {
     // Make sure we only accept requests from an allowed origin
@@ -265,7 +276,6 @@ wsServer.on('request', function(request) {
     console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
     return;
   }
-
   connection = request.accept('echo-protocol', request.origin);
   console.log((new Date()) + ' Connection accepted.');
   connection.on('message', function(message) {
@@ -275,8 +285,10 @@ wsServer.on('request', function(request) {
       if (data.action === "saveVideo") {
         var robot = require("robotjs");
         robot.keyTap("s", ["control", "shift"]);
-      } else if (data.action === "sendTweet") {
+      } else if (data.action === "saveAndSendTweet") {
         processTweet(data.id, data.text);
+      } else if (data.action === "saveVideoWithNameOnly") {
+        saveForLater(data.id, data.text);
       }
     }
   });
@@ -291,7 +303,7 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
     .boolean(['r'])
     .argv
 ;
-let remote = false
+let remote = true
 if (argv.r) {
   remote = true
 }
@@ -299,12 +311,17 @@ console.log("remote is ", remote)
 
 
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
-    if (/tweets/.test(f)) return skip;
+    if (/tweets|thumbs/.test(f)) return skip;
     return true
   } }, function(evt, name) {
+
   if (evt === "update") {
     if (remote) {
-      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name}));
+      let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
+      fs.copyFileSync(name, thumb)
+    console.log("thumb to upload is ", thumb)
+      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
+
     } else {
       prompt.start();
       prompt.get(['tweet'], function (err, result) {
@@ -316,7 +333,6 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
       });
     }
   }
-
 });
 
 
