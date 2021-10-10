@@ -2,7 +2,7 @@ obs_watch_dir = "C:/Users/zarar/Videos/OBS"
 ffmpeg_binary = "C:/Users/zarar/Tools/ffmpeg/bin/ffmpeg.exe"
 
 [twitter]
-consumer_key: "asdf",
-consumer_secret: "asdf",
-token: "asdf",
-token_secret: "sadf"
+consumer_key = "sadf"
+consumer_secret = "asdf"
+token = "asdf"
+token_secret = "sadf"
