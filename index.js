@@ -251,11 +251,11 @@ function ffmpegErrorHandler(error, stdout, stderr) {
 function saveWithNewName(name, newNameNoAudio, newName, tweet) {
   let trim = ""
   if (tweet.in_point && tweet.out_point) {
-    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} -to ${tweet.out_point} -c copy ${newName}`
+    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} -to ${tweet.out_point} ${newName}`
   } else if (tweet.in_point) {
-    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} -c copy ${newName}`
+    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} ${newName}`
   } else if (tweet.out_point) {
-    trim = `${ffmpeg} -i ${name} -to ${tweet.out_point} -c copy ${newName}`
+    trim = `${ffmpeg} -i ${name} -to ${tweet.out_point} ${newName}`
   }
   if (trim !== "") {
     execSync(trim, ffmpegErrorHandler);
