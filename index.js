@@ -203,7 +203,7 @@ const path = require('path');
 const watch = require('node-watch');
 const slugify = require('slugify');
 
-const { exec  } = require("child_process");
+const { execSync  } = require("child_process");
 
 const ffmpeg = tomlData.ffmpeg_binary;
 const watchDirectory = tomlData.obs_watch_dir;
@@ -258,7 +258,7 @@ function saveWithNewName(name, newNameNoAudio, newName, tweet) {
     trim = `${ffmpeg} -i ${name} -to ${tweet.out_point} -c copy ${newName}`
   }
   if (trim !== "") {
-    exec(trim, ffmpegErrorHandler);
+    execSync(trim, ffmpegErrorHandler);
   } else {
     fs.copyFile(name, newName, function (err) {
       if (err) {
@@ -266,7 +266,7 @@ function saveWithNewName(name, newNameNoAudio, newName, tweet) {
       }
     })
   }
-  exec(`${ffmpeg} -i ${newName} -c copy -an ${newNameNoAudio}`, ffmpegErrorHandler);
+  execSync(`${ffmpeg} -i ${newName} -c copy -an ${newNameNoAudio}`, ffmpegErrorHandler);
 }
 
 function slugifiedPath(tweet) {
