@@ -344,11 +344,15 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
   if (evt === "update") {
     // this call fails if the file is being written to which is what we want as we don't want
     // to process incomplete files
-    const duration = await getVideoDurationInSeconds(name)
-    console.log("duration is ", duration)
-    let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
-    fs.copyFileSync(name, thumb)
-    connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
+    try {
+      const duration = await getVideoDurationInSeconds(name)
+      console.log("duration is ", duration)
+      let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
+      fs.copyFileSync(name, thumb)
+      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
+    } catch (e) {
+      console.log("incomplete file found, skipping")
+    }
   }
 });
 
