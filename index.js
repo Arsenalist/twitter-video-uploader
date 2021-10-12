@@ -342,11 +342,10 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     return true
   } }, async function(evt, name) {
   if (evt === "update") {
-    // this call fails if the file is being written to which is what we want as we don't want
-    // to process incomplete files
     try {
-      const duration = await getVideoDurationInSeconds(name)
-      console.log("duration is ", duration)
+      // this call fails if the file is being written to which is what we want as we don't want
+      // to process incomplete files
+      await getVideoDurationInSeconds(name)
       let thumb = `${tomlData.web_client_dir}/public/videos/${path.basename(name)}`;
       fs.copyFileSync(name, thumb)
       connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/videos/${path.basename(thumb)}`}));
