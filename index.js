@@ -270,11 +270,11 @@ function saveWithNewName(name, newNameNoAudio, newName, tweet) {
 }
 
 function slugifiedPath(tweet) {
-  return `${path.dirname(tweet.id)}/tweets/${slugify(tweet.text)}${path.extname(tweet.id)}`;
+  return `${tomlData.output_dir}/${slugify(tweet.text)}${path.extname(tweet.id)}`;
 }
 
 function noAudioPath(tweet) {
-  return `${path.dirname(tweet.id)}/tweets/no-audio/${slugify(tweet.text)}${path.extname(tweet.id)}`;
+  return `${tomlData.output_noaudio_dir}/${slugify(tweet.text)}${path.extname(tweet.id)}`;
 }
 
 function saveForLater(tweet) {
