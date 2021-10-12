@@ -5,7 +5,7 @@ ffmpeg_binary = "C:/Users/zarar/Tools/ffmpeg/bin/ffmpeg.exe"
 web_client_dir = "C:/Users/zarar/projects/twitter-video-upload-client"
 
 [twitter]
-consumer_key = "Gkhp0LICWnVCewtZPIGqhpmnN"
-consumer_secret = "8ovEvoj97Fgn1lUyTyZ1CfuaX0pscOeHjXkCPHEQc4JDt8pfSO"
-token = "16606280-cgYFfr9x4sOk6eVRJ9NDPZzyjckdEBis3kPgVoLwH"
-token_secret = "tVSKP2KQjXPXDamPdMxyygySuWfSGW0DUh6XsMKWtXJas"
+consumer_key = "enter value"
+consumer_secret = "enter value"
+token = "enter value"
+token_secret = "enter value"
