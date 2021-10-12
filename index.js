@@ -338,8 +338,7 @@ wsServer.on('request', function(request) {
 });
 
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
-    if (/tweets|thumbs/.test(f)) return skip;
-    return true
+    return !(fs.existsSync(f) && fs.lstatSync(f).isDirectory());
   } }, async function(evt, name) {
   if (evt === "update") {
     try {
