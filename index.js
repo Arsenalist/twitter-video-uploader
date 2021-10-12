@@ -297,7 +297,7 @@ function processTweet(tweet) {
 }
 
 function deleteThumbnail(file) {
-  fs.unlink(`../twitter-video-upload-client/public/${path.basename(file)}`, function(e) {
+  fs.unlink(`${tomlData.web_client_dir}/public/videos/${path.basename(file)}`, function(e) {
     if (e) {
       console.log("error cleaning up file from preview directory (don't worry about it)")
     }
@@ -347,9 +347,9 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     try {
       const duration = await getVideoDurationInSeconds(name)
       console.log("duration is ", duration)
-      let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
+      let thumb = `${tomlData.web_client_dir}/public/videos/${path.basename(name)}`;
       fs.copyFileSync(name, thumb)
-      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
+      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/videos/${path.basename(thumb)}`}));
     } catch (e) {
       console.log("incomplete file found, skipping")
     }
