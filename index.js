@@ -2,7 +2,7 @@ var request = require('request');
 const fs = require('fs');
 const toml = require('toml');
 const tomlData = toml.parse(fs.readFileSync('config.toml'));
-
+const { getVideoDurationInSeconds } = require('get-video-duration')
 
 var MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
 var POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
@@ -236,42 +236,72 @@ function originIsAllowed(origin) {
 }
 var connection
 
-function saveWithNewName(name, newNameNoAudio, newName) {
-  exec(`${ffmpeg} -i ${name} -c copy -an ${newNameNoAudio}`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-  });
+function ffmpegErrorHandler(error, stdout, stderr) {
+  if (error) {
+    console.log(`error: ${error.message}`);
+    return;
+  }
+  if (stderr) {
+    console.log(`stderr: ${stderr}`);
+    return;
+  }
+  console.log(`stdout: ${stdout}`);
+}
 
-  fs.copyFile(name, newName, function (err) {
-    if (err) {
-      console.log("error copying file ", err)
+function saveWithNewName(name, newNameNoAudio, newName, tweet) {
+  let trim = ""
+  if (tweet.in_point && tweet.out_point) {
+    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} -to ${tweet.out_point} -c copy ${newName}`
+  } else if (tweet.in_point) {
+    trim = `${ffmpeg} -i ${name} -ss ${tweet.in_point} -c copy ${newName}`
+  } else if (tweet.out_point) {
+    trim = `${ffmpeg} -i ${name} -to ${tweet.out_point} -c copy ${newName}`
+  }
+  if (trim !== "") {
+    exec(trim, ffmpegErrorHandler);
+  } else {
+    fs.copyFile(name, newName, function (err) {
+      if (err) {
+        console.log("error copying file ", err)
+      }
+    })
+  }
+  exec(`${ffmpeg} -i ${newName} -c copy -an ${newNameNoAudio}`, ffmpegErrorHandler);
+}
+
+function slugifiedPath(tweet) {
+  return `${path.dirname(tweet.id)}/tweets/${slugify(tweet.text)}${path.extname(tweet.id)}`;
+}
+
+function noAudioPath(tweet) {
+  return `${path.dirname(tweet.id)}/tweets/no-audio/${slugify(tweet.text)}${path.extname(tweet.id)}`;
+}
+
+function saveForLater(tweet) {
+  const newName = slugifiedPath(tweet);
+  const newNameNoAudio = noAudioPath(tweet);
+  saveWithNewName(tweet.id, newNameNoAudio, newName, tweet);
+  deleteThumbnail(tweet.id)
+}
+
+
+function processTweet(tweet) {
+  const newName = slugifiedPath(tweet);
+  const newNameNoAudio = noAudioPath(tweet);
+  saveWithNewName(tweet.id, newNameNoAudio, newName, tweet);
+  new VideoTweet({
+    file_path: newName,
+    tweet_text: tweet.text
+  });
+  deleteThumbnail(tweet.id)
+}
+
+function deleteThumbnail(file) {
+  fs.unlink(`../twitter-video-upload-client/public/${path.basename(file)}`, function(e) {
+    if (e) {
+      console.log("error cleaning up file from preview directory (don't worry about it)")
     }
   })
-}
-
-function saveForLater(name, tweet) {
-  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
-  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
-  saveWithNewName(name, newNameNoAudio, newName);
-}
-
-
-function processTweet(name, tweet) {
-  const newName = `${path.dirname(name)}/tweets/${slugify(tweet)}${path.extname(name)}`;
-  const newNameNoAudio = `${path.dirname(name)}/tweets/no-audio/${slugify(tweet)}${path.extname(name)}`;
-
-  new VideoTweet({
-    file_path: name,
-    tweet_text: tweet
-  });
-  saveWithNewName(name, newNameNoAudio, newName);
 }
 
 wsServer.on('request', function(request) {
@@ -283,17 +313,22 @@ wsServer.on('request', function(request) {
   }
   connection = request.accept('echo-protocol', request.origin);
   console.log((new Date()) + ' Connection accepted.');
+  var robot = require("robotjs");
   connection.on('message', function(message) {
     console.log("message is ", message)
     const data = JSON.parse(message.utf8Data)
     if (message.type === 'utf8') {
-      if (data.action === "saveVideo") {
-        var robot = require("robotjs");
+      if (data.action === "saveReplay") {
         robot.keyTap("s", ["control", "shift"]);
+      } else if (data.action === "saveVideo") {
+        robot.keyTap("e", ["control", "alt", "shift"]);
+        setTimeout(() => robot.keyTap("f", ["control", "alt", "shift"]), 3000);
       } else if (data.action === "saveAndSendTweet") {
-        processTweet(data.id, data.text);
+        processTweet(data);
       } else if (data.action === "saveVideoWithNameOnly") {
-        saveForLater(data.id, data.text);
+        saveForLater(data);
+      } else if (data.action === "clearVideo") {
+        deleteThumbnail(data.id)
       }
     }
   });
@@ -302,29 +337,18 @@ wsServer.on('request', function(request) {
   });
 });
 
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
-const argv = require('yargs/yargs')(process.argv.slice(2))
-    .boolean(['r'])
-    .argv
-;
-
 watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     if (/tweets|thumbs/.test(f)) return skip;
-    if (!path.basename(f).startsWith("Replay_")) {
-      return skip
-    }
     return true
-  } }, function(evt, name) {
-
+  } }, async function(evt, name) {
   if (evt === "update") {
-      let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
-      fs.copyFileSync(name, thumb)
-      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
+    // this call fails if the file is being written to which is what we want as we don't want
+    // to process incomplete files
+    const duration = await getVideoDurationInSeconds(name)
+    console.log("duration is ", duration)
+    let thumb = `../twitter-video-upload-client/public/${path.basename(name)}`;
+    fs.copyFileSync(name, thumb)
+    connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/${path.basename(thumb)}`}));
   }
 });
 
-
-/**
- * Instantiates a VideoTweet
- */
