@@ -355,7 +355,7 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
       connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/videos/${path.basename(thumb)}`}));
       console.log("after send")
     } catch (e) {
-      console.log("incomplete file found, skipping")
+      console.log("incomplete file found, skipping", e)
     }
   }
 });
