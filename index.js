@@ -345,18 +345,13 @@ watch(watchDirectory, { recursive: false, filter: function(f, skip) {
     try {
       // this call fails if the file is being written to which is what we want as we don't want
       // to process incomplete files
-      console.log("getting duration")
-      const duration = await getVideoDurationInSeconds(name)
-      console.log("duration ", duration)
-      let thumb = `${tomlData.web_client_dir}/public/videos/${path.basename(name)}`;
-      console.log("thumb ", thumb)
-      fs.copyFileSync(name, thumb)
-      console.log("after sync")
-      connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/videos/${path.basename(thumb)}`}));
-      console.log("after send")
+      await getVideoDurationInSeconds(name)
     } catch (e) {
       console.log("incomplete file found, skipping", e)
     }
+    let thumb = `${tomlData.web_client_dir}/public/videos/${path.basename(name)}`;
+    fs.copyFileSync(name, thumb)
+    connection.sendUTF(JSON.stringify({action: "tweetRequest", id: name, thumb: `/videos/${path.basename(thumb)}`}));
   }
 });
 
