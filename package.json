@@ -2,11 +2,11 @@
   "name": "twitter-video-upload",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "start:remote": "node index.js -r"
+    "start": "tsc && node dist/index.js",
+    "start:remote": "node index.ts -r"
   },
   "author": "",
   "license": "ISC",
@@ -19,5 +19,10 @@
     "slugify": "^1.4.7",
     "toml": "^3.0.0",
     "websocket": "^1.0.33"
+  },
+  "devDependencies": {
+    "@types/node": "^16.10.9",
+    "tslint": "^6.1.3",
+    "typescript": "^4.4.4"
   }
 }

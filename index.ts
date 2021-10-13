@@ -41,9 +41,9 @@ var VideoTweet = function (data) {
 VideoTweet.prototype.upload_init = function () {
 
 
-  var self = this;
+  const self = this;
 
-  form_data = {
+  const form_data = {
     'command': 'INIT',
     'media_type': 'video/mp4',
     'total_bytes': self.total_bytes,
@@ -53,7 +53,7 @@ VideoTweet.prototype.upload_init = function () {
   // inits media upload
   request.post({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, formData: form_data}, function (error, response, body) {
 
-    data = JSON.parse(body)
+    const data = JSON.parse(body)
     // store media ID for later reference
     self.media_id = data.media_id_string;
 
@@ -117,7 +117,7 @@ VideoTweet.prototype.upload_finalize = function () {
 
   var self = this;
 
-  form_data = {
+  const form_data = {
     'command': 'FINALIZE',
     'media_id': self.media_id
   }
@@ -125,7 +125,7 @@ VideoTweet.prototype.upload_finalize = function () {
   // finalize uploaded chunck and check processing status on compelete
   request.post({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, formData: form_data}, function(error, response, body) {
 
-    data = JSON.parse(body)
+    const data = JSON.parse(body)
     self.check_status(data.processing_info);
   });
 }
@@ -145,7 +145,7 @@ VideoTweet.prototype.check_status = function (processing_info) {
   }
 
 
-  request_params = {
+  const request_params = {
     'command': 'STATUS',
     'media_id': self.media_id
   }
@@ -153,7 +153,7 @@ VideoTweet.prototype.check_status = function (processing_info) {
   // check processing status
   request.get({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, qs: request_params}, function(error, response, body) {
 
-    data = JSON.parse(body)
+    const data = JSON.parse(body)
 
     //console.log('Media processing status is ' + processing_info.state);
 
@@ -167,7 +167,7 @@ VideoTweet.prototype.check_status = function (processing_info) {
     }
 
     // check status again after specified duration
-    var timeout_length = data.processing_info.check_after_secs ? data.processing_info.check_after_secs * 1000 : 0;
+    const timeout_length = data.processing_info.check_after_secs ? data.processing_info.check_after_secs * 1000 : 0;
 
     // console.log('Checking after ' + timeout_length + ' milliseconds');
 
@@ -185,7 +185,7 @@ VideoTweet.prototype.tweet = function () {
 
   var self = this;
 
-  request_data = {
+  const request_data = {
     'status': self.tweet_text,
     'media_ids': self.media_id
   }
@@ -193,7 +193,7 @@ VideoTweet.prototype.tweet = function () {
   // publish Tweet
   request.post({url: POST_TWEET_URL, oauth: OAUTH, form: request_data}, function(error, response, body) {
 
-    data = JSON.parse(body)
+    const data = JSON.parse(body)
 
 
   });
@@ -208,10 +208,10 @@ const { execSync  } = require("child_process");
 const ffmpeg = tomlData.ffmpeg_binary;
 const watchDirectory = tomlData.obs_watch_dir;
 
-var WebSocketServer = require('websocket').server;
-var http = require('http');
+const WebSocketServer = require('websocket').server;
+const http = require('http');
 
-var server = http.createServer(function(request, response) {
+const server = http.createServer(function(request, response) {
   console.log((new Date()) + ' Received request for ' + request.url);
   response.writeHead(404);
   response.end();
@@ -220,7 +220,7 @@ server.listen(8888, function() {
   console.log((new Date()) + ' Server is listening on port 8888');
 });
 
-wsServer = new WebSocketServer({
+const wsServer = new WebSocketServer({
   httpServer: server,
   // You should not use autoAcceptConnections for production
   // applications, as it defeats all standard cross-origin protection
