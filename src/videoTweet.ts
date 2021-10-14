@@ -12,7 +12,7 @@ export class VideoTweet {
     private total_bytes;
     private media_id: undefined;
     private processing_info: undefined;
-    private twitterConfig: TwitterConfig;
+    private readonly twitterConfig: TwitterConfig;
 
     constructor(twitterConfig: TwitterConfig, data) {
         this.twitterConfig = twitterConfig;
