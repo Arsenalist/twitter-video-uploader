@@ -1,18 +1,10 @@
+import {TwitterConfig} from "./config";
+
 const fs = require('fs');
 const request = require('request');
 
 const MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
 const POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
-const toml = require('toml');
-const tomlData = toml.parse(fs.readFileSync('config.toml'));
-
-const OAUTH = {
-    consumer_key: tomlData.twitter.consumer_key,
-    consumer_secret: tomlData.twitter.consumer_secret,
-    token: tomlData.twitter.token,
-    token_secret: tomlData.twitter.token_secret
-}
-
 
 export class VideoTweet {
     private readonly file_path: string;
@@ -20,8 +12,10 @@ export class VideoTweet {
     private total_bytes;
     private media_id: undefined;
     private processing_info: undefined;
+    private twitterConfig: TwitterConfig;
 
-    constructor(data) {
+    constructor(twitterConfig: TwitterConfig, data) {
+        this.twitterConfig = twitterConfig;
         this.file_path = data.file_path;
         this.tweet_text = data.tweet_text;
 
@@ -42,7 +36,7 @@ export class VideoTweet {
         }
 
         // inits media upload
-        request.post({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, formData: form_data}, (error, response, body) => {
+        request.post({url: MEDIA_ENDPOINT_URL, oauth: this.twitterConfig, formData: form_data}, (error, response, body) => {
 
             const data = JSON.parse(body)
             // store media ID for later reference
@@ -79,7 +73,7 @@ export class VideoTweet {
                     media_data: data.toString('base64')
                 };
 
-                request.post({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, formData: form_data}, () => {
+                request.post({url: MEDIA_ENDPOINT_URL, oauth: this.twitterConfig, formData: form_data}, () => {
                     segments_completed = segments_completed + 1;
 
                     if (segments_completed == segment_index) {
@@ -101,7 +95,7 @@ export class VideoTweet {
         }
 
         // finalize uploaded chunck and check processing status on compelete
-        request.post({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, formData: form_data}, (error, response, body) => {
+        request.post({url: MEDIA_ENDPOINT_URL, oauth: this.twitterConfig, formData: form_data}, (error, response, body) => {
 
             const data = JSON.parse(body)
             this.check_status(data.processing_info);
@@ -124,7 +118,7 @@ export class VideoTweet {
         }
 
         // check processing status
-        request.get({url: MEDIA_ENDPOINT_URL, oauth: OAUTH, qs: request_params}, (error, response, body) => {
+        request.get({url: MEDIA_ENDPOINT_URL, oauth: this.twitterConfig, qs: request_params}, (error, response, body) => {
 
             const data = JSON.parse(body)
 
@@ -154,7 +148,7 @@ export class VideoTweet {
             'media_ids': this.media_id
         }
         // publish Tweet
-        request.post({url: POST_TWEET_URL, oauth: OAUTH, form: request_data}, function (error, response, body) {
+        request.post({url: POST_TWEET_URL, oauth: this.twitterConfig, form: request_data}, function (error, response, body) {
             JSON.parse(body)
         });
     }
