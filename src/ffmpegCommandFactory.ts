@@ -8,6 +8,9 @@ export class FfmpegCommandFactory {
     creatTrimCommand = (in_point: number, out_point: number, in_file: string, out_file: string) => {
         let trim = ""
         if (in_point && out_point) {
+            if (in_point >= out_point) {
+                return trim
+            }
             trim = `${this.ffmpegBinary} -i ${in_file} -ss ${in_point} -to ${out_point} ${out_file}`
         } else if (in_point) {
             trim = `${this.ffmpegBinary} -i ${in_file} -ss ${in_point} ${out_file}`
