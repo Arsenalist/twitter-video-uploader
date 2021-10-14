@@ -1,10 +1,10 @@
-import {websocketMessageHandler} from "./controller";
 import {SocketServerWrapper} from "./socketServerWrapper";
 import {appConfig} from "./config";
 import {
   createThumbnailPath,
   createThumbnailPathFromWebRoot
 } from "./videoFilePaths";
+import {websocketMessageHandler} from "./messageHandler";
 const fs = require('fs');
 
 const { getVideoDurationInSeconds } = require('get-video-duration')
