@@ -2,7 +2,6 @@ import {saveReplayKeyboardShortcut, saveVideStopAndStartKeyboardShortcut} from "
 import {deleteThumbnail, saveAndSendTweet, saveForLater} from "./controller";
 
 export const websocketMessageHandler = (message) => {
-    console.log("message is ", message)
     const data = JSON.parse(message.utf8Data)
 
     if (message.type === 'utf8') {
