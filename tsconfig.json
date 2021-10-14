@@ -6,8 +6,10 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
-    "types": [ "node" ],
-    "typeRoots": [ "../node_modules/@types" ]
+    "types": [ "reflect-metadata", "node", "jest"],
+    "typeRoots": [ "node_modules/@types" ]
   },
-  "lib": ["es2015"]
+  "lib": ["es2015"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"],
+  "include": ["./src/**/*.tsx", "./src/**/*.ts"]
 }
