@@ -15,7 +15,6 @@ import {
 const fs = require('fs');
 const { getVideoDurationInSeconds } = require('get-video-duration')
 
-const path = require('path');
 const watch = require('node-watch');
 
 const watchDirectory = appConfig.obs_watch_dir;
