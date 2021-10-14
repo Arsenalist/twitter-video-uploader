@@ -1,29 +1,24 @@
 import {VideoTweet} from "./videoTweet";
 import {SocketServerWrapper} from "./socketServerWrapper";
-const robot = require("robotjs");
+import {FfmpegCommandFactory} from "./ffmpegCommandFactory";
+import {FfmpegCommandExecutor} from "./ffmpegCommandExecutor";
+import {saveReplayKeyboardShortcut, saveVideStopAndStartKeyboardShortcut} from "./keyTaps";
+import {appConfig} from "./config";
+import {VideoSaveRequest} from "./videoSaveRequest";
+import {
+  createNoAudioOutputPath,
+  createOutputPath,
+  createThumbnailPath,
+  createThumbnailPathFromWebRoot
+} from "./videoFilePaths";
+
 const fs = require('fs');
-const toml = require('toml');
-const tomlData = toml.parse(fs.readFileSync('config.toml'));
 const { getVideoDurationInSeconds } = require('get-video-duration')
 
 const path = require('path');
 const watch = require('node-watch');
-const slugify = require('slugify');
 
-const { execSync  } = require("child_process");
-
-const ffmpeg = tomlData.ffmpeg_binary;
-const watchDirectory = tomlData.obs_watch_dir;
-
-
-function saveReplayKeyboardShortcut() {
-  robot.keyTap("s", ["control", "shift"]);
-}
-
-function saveVideStopAndStartKeyboardShortcut() {
-  robot.keyTap("e", ["control", "alt", "shift"]);
-  setTimeout(() => robot.keyTap("f", ["control", "alt", "shift"]), 3000);
-}
+const watchDirectory = appConfig.obs_watch_dir;
 
 function messageHandler(message) {
   console.log("message is ", message)
@@ -46,84 +41,49 @@ function messageHandler(message) {
 
 const wrapper = new SocketServerWrapper(messageHandler)
 
-function createFfmpegTrimCommand(tweet, in_file, out_file) {
-  let trim = ""
-  if (tweet.in_point && tweet.out_point) {
-    trim = `${ffmpeg} -i ${in_file} -ss ${tweet.in_point} -to ${tweet.out_point} ${out_file}`
-  } else if (tweet.in_point) {
-    trim = `${ffmpeg} -i ${in_file} -ss ${tweet.in_point} ${out_file}`
-  } else if (tweet.out_point) {
-    trim = `${ffmpeg} -i ${in_file} -to ${tweet.out_point} ${out_file}`
-  }
-  return trim;
+
+function saveWithNoAudio(ffmpegCommandFactory: FfmpegCommandFactory, out_file, out_file_no_audio) {
+  const ffmpegExecutor = new FfmpegCommandExecutor()
+  ffmpegExecutor.executeFfmpegCommand(ffmpegCommandFactory.createStripAudioCommand(out_file, out_file_no_audio))
 }
 
-function createFfmpegStripAudioCommand(out_file, out_file_no_audio) {
-  return `${ffmpeg} -i ${out_file} -c copy -an ${out_file_no_audio}`;
-}
-
-function saveWithNewName(in_file, out_file_no_audio, out_file, tweet) {
-  let ffmpegTrimCommand = createFfmpegTrimCommand(tweet, in_file, out_file);
+function saveWithNiceName(ffmpegCommandFactory: FfmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest: VideoSaveRequest) {
+  let ffmpegTrimCommand = ffmpegCommandFactory.creatTrimCommand(videoSaveRequest.in_point, videoSaveRequest.out_point, videoSaveRequest.id, out_file);
   if (ffmpegTrimCommand !== "") {
-    executeFfmpegCommand(ffmpegTrimCommand)
+    const ffmpegExecutor = new FfmpegCommandExecutor()
+    ffmpegExecutor.executeFfmpegCommand(ffmpegTrimCommand)
   } else {
-    fs.copyFileSync(in_file, out_file)
+    fs.copyFileSync(videoSaveRequest.id, out_file)
   }
-  executeFfmpegCommand(createFfmpegStripAudioCommand(out_file, out_file_no_audio))
+  saveWithNoAudio(ffmpegCommandFactory, out_file, out_file_no_audio);
 }
 
-function executeFfmpegCommand(command: string) {
-  execSync(command, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-  }
-)
+function saveForLater(videoSaveRequest: VideoSaveRequest) {
+  const ffmpegCommandFactory = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+  const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+  const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+  saveWithNiceName(ffmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest);
+  deleteThumbnail(videoSaveRequest.id)
 }
 
-function slugifiedPath(tweet) {
-  return `${tomlData.output_dir}/${slugify(tweet.text)}${path.extname(tweet.id)}`;
-}
-
-function noAudioPath(tweet) {
-  return `${tomlData.output_noaudio_dir}/${slugify(tweet.text)}${path.extname(tweet.id)}`;
-}
-
-function saveForLater(tweet) {
-  const newName = slugifiedPath(tweet);
-  const newNameNoAudio = noAudioPath(tweet);
-  saveWithNewName(tweet.id, newNameNoAudio, newName, tweet);
-  deleteThumbnail(tweet.id)
-}
-
-
-function saveAndSendTweet(tweet) {
-  const in_file = slugifiedPath(tweet);
-  const out_file_no_audio = noAudioPath(tweet);
-  saveWithNewName(tweet.id, out_file_no_audio, in_file, tweet);
+function saveAndSendTweet(videoSaveRequest: VideoSaveRequest) {
+  const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+  const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+  const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+  saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
   new VideoTweet({
-    file_path: in_file,
-    tweet_text: tweet.text
+    file_path: out_file,
+    tweet_text: videoSaveRequest.text
   });
-  deleteThumbnail(tweet.id)
+  deleteThumbnail(videoSaveRequest.id)
 }
 
 function deleteThumbnail(file_path: string) {
-  fs.unlink(createThumbnailPath(file_path), function(e) {
+  fs.unlink(createThumbnailPath(appConfig.web_client_dir, file_path), function(e) {
     if (e) {
       console.log("error cleaning up file_path from preview directory (don't worry about it)")
     }
   })
-}
-
-function createThumbnailPath(file_path: string) {
-  return `${tomlData.web_client_dir}/public/videos/${path.basename(file_path)}`;
 }
 
 watch(watchDirectory, { recursive: false, filter: (newDetectedFile: string) => {
@@ -137,9 +97,8 @@ watch(watchDirectory, { recursive: false, filter: (newDetectedFile: string) => {
     } catch (e) {
       console.log("incomplete file found, skipping", e)
     }
-    let thumb = createThumbnailPath(newDetectedFile);
+    let thumb = createThumbnailPath(appConfig.web_client_dir, newDetectedFile);
     fs.copyFileSync(newDetectedFile, thumb)
-    wrapper.send(JSON.stringify({action: "tweetRequest", id: newDetectedFile, thumb: `/videos/${path.basename(thumb)}`}))
+    wrapper.send(JSON.stringify({action: "tweetRequest", id: newDetectedFile, thumb: createThumbnailPathFromWebRoot(thumb)}))
   }
 });
-
