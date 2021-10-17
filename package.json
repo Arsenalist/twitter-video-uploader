@@ -11,8 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "get-video-duration": "^4.0.0",
+    "google-auth-library": "^7.10.1",
+    "googleapis": "^88.2.0",
     "node-watch": "^0.7.1",
     "prompt": "^1.1.0",
+    "readline": "^1.3.0",
     "request": "^2.88.2",
     "robotjs": "^0.6.0",
     "slugify": "^1.4.7",
@@ -20,7 +23,9 @@
     "websocket": "^1.0.33"
   },
   "jest": {
-    "roots": ["<rootDir>/src"],
+    "roots": [
+      "<rootDir>/src"
+    ],
     "transform": {
       ".(ts|tsx)": "ts-jest"
     },

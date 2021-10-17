@@ -2,7 +2,7 @@ import {websocketMessageHandler} from "./messageHandler"
 jest.mock('./keyTaps')
 jest.mock('./controller')
 import {saveReplayKeyboardShortcut, saveVideStopAndStartKeyboardShortcut} from "./keyTaps"
-import {deleteThumbnail, saveAndSendTweet, saveForLater} from "./controller"
+import {deleteThumbnail, saveAndSendToYouTube, saveAndSendTweet, saveForLater} from "./controller"
 
 describe('websocketMessageHandler', () => {
 
@@ -21,6 +21,13 @@ describe('websocketMessageHandler', () => {
         websocketMessageHandler({type: "utf8", utf8Data: JSON.stringify(messagePayload)})
         expect(saveAndSendTweet).toHaveBeenCalledTimes(1)
         expect(saveAndSendTweet).toHaveBeenCalledWith(messagePayload)
+    })
+
+    it("calls saveAndSendTweet when action is saveAndSendToYouTube", () => {
+        const messagePayload = {action: "saveAndSendToYouTube"};
+        websocketMessageHandler({type: "utf8", utf8Data: JSON.stringify(messagePayload)})
+        expect(saveAndSendToYouTube).toHaveBeenCalledTimes(1)
+        expect(saveAndSendToYouTube).toHaveBeenCalledWith(messagePayload)
     })
 
     it("calls saveForLater when action is saveVideoWithNameOnly", () => {

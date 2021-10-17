@@ -1,7 +1,7 @@
 import {saveReplayKeyboardShortcut, saveVideStopAndStartKeyboardShortcut} from "./keyTaps";
-import {deleteThumbnail, saveAndSendTweet, saveForLater} from "./controller";
+import {deleteThumbnail, saveAndSendToYouTube, saveAndSendTweet, saveForLater} from "./controller";
 
-export const websocketMessageHandler = (message) => {
+export const websocketMessageHandler = async (message) => {
     const data = JSON.parse(message.utf8Data)
 
     if (message.type === 'utf8') {
@@ -11,6 +11,8 @@ export const websocketMessageHandler = (message) => {
             saveVideStopAndStartKeyboardShortcut();
         } else if (data.action === "saveAndSendTweet") {
             saveAndSendTweet(data);
+        } else if (data.action === "saveAndSendToYouTube") {
+           await saveAndSendToYouTube(data);
         } else if (data.action === "saveVideoWithNameOnly") {
             saveForLater(data);
         } else if (data.action === "clearVideo") {

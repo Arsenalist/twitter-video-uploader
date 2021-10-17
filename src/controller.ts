@@ -1,3 +1,5 @@
+import {uploadToYouTube} from "./youtube";
+
 const fs = require('fs');
 import {FfmpegCommandFactory} from "./ffmpegCommandFactory";
 import {FfmpegCommandExecutor} from "./ffmpegCommandExecutor";
@@ -41,6 +43,17 @@ export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
     });
     deleteThumbnail(videoSaveRequest.id)
 }
+
+export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) => {
+    const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+    const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+    const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+    saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
+    await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
+        deleteThumbnail(videoSaveRequest.id)
+    })
+}
+
 export const deleteThumbnail = (file_path: string) => {
     fs.unlink(createThumbnailPath(appConfig.web_client_dir, file_path), function(e) {
         if (e) {
