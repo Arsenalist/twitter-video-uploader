@@ -27,7 +27,7 @@ export const uploadToYouTube = async (credentials, fileName, text) => {
                     description: text,
                 },
                 status: {
-                    privacyStatus: 'private',
+                    privacyStatus: 'public',
                 },
             },
             media: {
