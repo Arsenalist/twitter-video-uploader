@@ -5,7 +5,7 @@ import {fileDetectedHandler} from "./fileDetectedHandler";
 const fs = require('fs');
 const watch = require('node-watch');
 
-const wrapper = new SocketServerWrapper(websocketMessageHandler)
+const socketServerWrapper = new SocketServerWrapper(websocketMessageHandler)
 
 const isDirectory = (newDetectedFile: string) => {
   return fs.existsSync(newDetectedFile) && fs.lstatSync(newDetectedFile).isDirectory();
@@ -17,6 +17,6 @@ watch(appConfig.obs_watch_dir, {
   }
 }, async (evt, newDetectedFile: string) => {
   if (evt === "update") {
-    await  fileDetectedHandler(newDetectedFile, wrapper, appConfig.web_client_dir);
+    await  fileDetectedHandler(newDetectedFile, socketServerWrapper, appConfig.web_client_dir);
   }
 });
