@@ -17,12 +17,16 @@ export const fileDetectedHandler = async (newDetectedFile: string, wrapper: Sock
     if (!processFile) {
         return;
     }
-    let thumb = createThumbnailPath(web_client_dir, newDetectedFile);
-    fs.copyFileSync(newDetectedFile, thumb)
-    wrapper.send(JSON.stringify({
-        action: "tweetRequest",
-        id: newDetectedFile,
-        thumb: createThumbnailPathFromWebRoot(thumb)
-    }))
-    console.log("processed", newDetectedFile);
+    try {
+        let thumb = createThumbnailPath(web_client_dir, newDetectedFile);
+        fs.copyFileSync(newDetectedFile, thumb)
+        wrapper.send(JSON.stringify({
+            action: "tweetRequest",
+            id: newDetectedFile,
+            thumb: createThumbnailPathFromWebRoot(thumb)
+        }))
+        console.log("processed", newDetectedFile);
+    } catch (e) {
+        console.log("encountered an error processing file", newDetectedFile);
+    }
 }
