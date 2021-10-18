@@ -17,6 +17,6 @@ watch(appConfig.obs_watch_dir, {
   }
 }, async (evt, newDetectedFile: string) => {
   if (evt === "update") {
-    await fileDetectedHandler(newDetectedFile, wrapper, appConfig.web_client_dir);
+    await  fileDetectedHandler(newDetectedFile, wrapper, appConfig.web_client_dir);
   }
 });
