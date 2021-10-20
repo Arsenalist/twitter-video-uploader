@@ -5,7 +5,7 @@ import {FfmpegCommandFactory} from "./ffmpegCommandFactory";
 import {FfmpegCommandExecutor} from "./ffmpegCommandExecutor";
 import {VideoSaveRequest} from "./videoSaveRequest";
 import {appConfig} from "./config";
-import {createNoAudioOutputPath, createOutputPath, createThumbnailPath} from "./videoFilePaths";
+import {createOutputPath, createThumbnailPath} from "./videoFilePaths";
 import {VideoTweet} from "./videoTweet";
 
 const saveWithNoAudio = (ffmpegCommandFactory: FfmpegCommandFactory, out_file, out_file_no_audio) => {
@@ -26,7 +26,7 @@ const saveWithNiceName = (ffmpegCommandFactory: FfmpegCommandFactory, out_file_n
 
 export const saveForLater = (videoSaveRequest: VideoSaveRequest) => {
     const ffmpegCommandFactory = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
     const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
     saveWithNiceName(ffmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest);
     deleteThumbnail(videoSaveRequest.id)
@@ -34,7 +34,7 @@ export const saveForLater = (videoSaveRequest: VideoSaveRequest) => {
 
 export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
     const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
     const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
     saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
     new VideoTweet(appConfig.twitter, {
@@ -46,7 +46,7 @@ export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
 
 export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) => {
     const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createNoAudioOutputPath(appConfig.output_noaudio_dir, videoSaveRequest.text, videoSaveRequest.id)
+    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
     const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
     saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
     await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {

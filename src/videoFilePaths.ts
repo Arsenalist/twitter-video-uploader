@@ -16,6 +16,8 @@ export const createOutputPath = (output_dir: string, videoSaveRequest: VideoSave
     let text = ""
     if (videoSaveRequest.text === undefined || videoSaveRequest.text.trim() === "") {
         text = "no-name"
+    } else if (videoSaveRequest.tag) {
+        text = `${videoSaveRequest.tag}-${videoSaveRequest.text}`
     } else {
         text = videoSaveRequest.text
     }

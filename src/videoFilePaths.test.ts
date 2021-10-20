@@ -1,25 +1,9 @@
 import {
-    createNoAudioOutputPath,
     createOutputPath,
     createThumbnailPath,
     createThumbnailPathFromWebRoot
 } from "./videoFilePaths";
 import {VideoSaveRequest} from "./videoSaveRequest";
-
-describe('createNoAudioOutputPath', () => {
-    it ('creates the no audio path for an mp4 file', ()=> {
-        expect(createNoAudioOutputPath("/usr/local/no-audio-dir", "my text string", "/usr/dir/file.mp4")).toEqual("/usr/local/no-audio-dir/my-text-string.mp4")
-    })
-    it ('creates the no audio path for an mkv file', ()=> {
-        expect(createNoAudioOutputPath("/usr/local/no-audio-dir", "my text string", "/usr/dir/file.mkv")).toEqual("/usr/local/no-audio-dir/my-text-string.mkv")
-    })
-    it ('creates the no audio path for a file with no extension', ()=> {
-        expect(createNoAudioOutputPath("/usr/local/no-audio-dir", "my text string", "/usr/dir/file")).toEqual("/usr/local/no-audio-dir/my-text-string")
-    })
-    it ('creates the no audio path for a file called no-name when no text provided', ()=> {
-        expect(createNoAudioOutputPath("/usr/local/no-audio-dir", "", "/usr/dir/file.mp4")).toEqual("/usr/local/no-audio-dir/no-name.mp4")
-    })
-})
 
 describe('createOutputPath', () => {
     it ('create output path', ()=> {
@@ -28,6 +12,14 @@ describe('createOutputPath', () => {
             id: '/usr/local/video.mp4'
         }
         expect(createOutputPath("/usr/local/output-dir", videoSaveRequest)).toEqual("/usr/local/output-dir/description-of-file.mp4")
+    })
+    it ('create output path with tag prepended when tag is provided', ()=> {
+        const videoSaveRequest: VideoSaveRequest=  {
+            text: 'description of file',
+            id: '/usr/local/video.mp4',
+            tag: 'my-tag'
+        }
+        expect(createOutputPath("/usr/local/output-dir", videoSaveRequest)).toEqual("/usr/local/output-dir/my-tag-description-of-file.mp4")
     })
     it ('crates a file called no-name.mp4 when no description is provided', ()=> {
         const videoSaveRequest: VideoSaveRequest=  {
