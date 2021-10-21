@@ -2,7 +2,7 @@ obs_watch_dir = "C:/Users/zarar/Videos/OBS"
 output_dir = "C:/Users/zarar/Videos/OBS/tweets"
 output_noaudio_dir = "C:/Users/zarar/Videos/OBS/tweets/no-audio"
 ffmpeg_binary = "C:/Users/zarar/Tools/ffmpeg/bin/ffmpeg.exe"
-web_client_dir = "C:/Users/zarar/projects/twitter-video-upload-client"
+web_client_dir = "C:/Users/zarar/projects/twitter-video-upload-client/build/videos"
 
 [twitter]
 consumer_key = "enter value"
