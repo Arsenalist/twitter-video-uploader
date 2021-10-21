@@ -20,7 +20,7 @@ describe('fileDetectedHandler', () => {
        socketServerWrapper.send = jest.fn();
         (getVideoDurationInSeconds as jest.Mock).mockResolvedValue(35);
        await fileDetectedHandler('/my/new/file.mp4', socketServerWrapper, '/web/dir');
-       expect(fs.copyFileSync).toHaveBeenCalledWith('/my/new/file.mp4', '/web/dir/public/videos/file.mp4');
+       expect(fs.copyFileSync).toHaveBeenCalledWith('/my/new/file.mp4', '/web/dir/file.mp4');
        expect(socketServerWrapper.send).toHaveBeenCalledWith(JSON.stringify({action: "tweetRequest", id: "/my/new/file.mp4", thumb: "/videos/file.mp4"}));
     })
 

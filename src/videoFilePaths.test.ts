@@ -32,7 +32,7 @@ describe('createOutputPath', () => {
 
 describe('createThumbnailPath', () => {
     it ('creates thumbnail path', ()=> {
-        expect(createThumbnailPath("/usr/local/web-dir", "/path/to/file.mp4")).toEqual("/usr/local/web-dir/public/videos/file.mp4")
+        expect(createThumbnailPath("/usr/local/web-dir", "/path/to/file.mp4")).toEqual("/usr/local/web-dir/file.mp4")
     })
 })
 

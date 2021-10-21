@@ -27,6 +27,6 @@ export const fileDetectedHandler = async (newDetectedFile: string, wrapper: Sock
         }))
         console.log("processed", newDetectedFile);
     } catch (e) {
-        console.log("encountered an error processing file", newDetectedFile);
+        console.log("encountered an error processing file", newDetectedFile, e);
     }
 }

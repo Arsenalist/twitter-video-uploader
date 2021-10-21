@@ -25,7 +25,7 @@ export const createOutputPath = (output_dir: string, videoSaveRequest: VideoSave
 }
 
 export const createThumbnailPath = (web_client_dir: string, file_path: string) => {
-    return `${web_client_dir}/public/videos/${path.basename(file_path)}`;
+    return `${web_client_dir}/${path.basename(file_path)}`;
 }
 
 export const createThumbnailPathFromWebRoot = (thumbnail_path: string) => {
