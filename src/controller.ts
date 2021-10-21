@@ -25,33 +25,39 @@ const saveWithNiceName = (ffmpegCommandFactory: FfmpegCommandFactory, out_file_n
 }
 
 export const saveForLater = (videoSaveRequest: VideoSaveRequest) => {
-    const ffmpegCommandFactory = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
-    const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
-    saveWithNiceName(ffmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest);
-    deleteThumbnail(videoSaveRequest.id)
+    setTimeout(() => {
+        const ffmpegCommandFactory = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+        const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
+        const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+        saveWithNiceName(ffmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest);
+        deleteThumbnail(videoSaveRequest.id)
+    }, 0);
 }
 
 export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
-    const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
-    const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
-    saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
-    new VideoTweet(appConfig.twitter, {
-        file_path: out_file,
-        tweet_text: videoSaveRequest.text
-    });
-    deleteThumbnail(videoSaveRequest.id)
+    setTimeout(() => {
+        const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+        const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
+        const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+        saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
+        new VideoTweet(appConfig.twitter, {
+            file_path: out_file,
+            tweet_text: videoSaveRequest.text
+        });
+        deleteThumbnail(videoSaveRequest.id)
+    }, 0);
 }
 
 export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) => {
-    const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
-    const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
-    const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
-    saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
-    await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
-        deleteThumbnail(videoSaveRequest.id)
-    })
+    setTimeout(async () => {
+        const ffmpeg = new FfmpegCommandFactory(appConfig.ffmpeg_binary)
+        const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
+        const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
+        saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
+        await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
+            deleteThumbnail(videoSaveRequest.id)
+        })
+    }, 0);
 }
 
 export const deleteThumbnail = (file_path: string) => {
