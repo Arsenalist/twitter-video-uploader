@@ -22,7 +22,7 @@ describe('fileDetectedHandler', () => {
         jest.spyOn(fs, 'statSync').mockReturnValue({mtime: new Date().getTime() - 5})
        await fileDetectedHandler('/my/new/file.mp4', socketServerWrapper, '/web/dir');
        expect(fs.copyFileSync).toHaveBeenCalledWith('/my/new/file.mp4', '/web/dir/file.mp4');
-       expect(socketServerWrapper.send).toHaveBeenCalledWith(JSON.stringify({action: "tweetRequest", id: "/my/new/file.mp4", thumb: "/videos/file.mp4"}));
+       expect(socketServerWrapper.send).toHaveBeenCalledWith(JSON.stringify({action: "videoInfoRequest", id: "/my/new/file.mp4", thumb: "/videos/file.mp4"}));
     })
 
     it("file is not processed when video duration is not computed (i.e., incomplete file)", async ()=> {

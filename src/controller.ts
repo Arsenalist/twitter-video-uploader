@@ -7,6 +7,9 @@ import {VideoSaveRequest} from "./videoSaveRequest";
 import {appConfig} from "./config";
 import {createOutputPath, createThumbnailPath} from "./videoFilePaths";
 import {VideoTweet} from "./videoTweet";
+import {socketServerWrapper} from "./index";
+import {infoMessage} from "./socketMessage";
+const path = require('path');
 
 const saveWithNoAudio = (ffmpegCommandFactory: FfmpegCommandFactory, out_file, out_file_no_audio) => {
     const ffmpegExecutor = new FfmpegCommandExecutor()
@@ -30,6 +33,7 @@ export const saveForLater = (videoSaveRequest: VideoSaveRequest) => {
         const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
         const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
         saveWithNiceName(ffmpegCommandFactory, out_file_no_audio, out_file, videoSaveRequest);
+        socketServerWrapper.send(infoMessage(`Saved file ${path.basename(out_file)}`));
         deleteThumbnail(videoSaveRequest.id)
     }, 0);
 }
@@ -44,6 +48,7 @@ export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
             file_path: out_file,
             tweet_text: videoSaveRequest.text
         });
+        socketServerWrapper.send(infoMessage(`Tweeted file ${path.basename(out_file)}`));
         deleteThumbnail(videoSaveRequest.id)
     }, 0);
 }
@@ -57,6 +62,7 @@ export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) =
         await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
             deleteThumbnail(videoSaveRequest.id)
         })
+        socketServerWrapper.send(infoMessage(`Uploaded to YouTube ${path.basename(out_file)}`));
     }, 0);
 }
 

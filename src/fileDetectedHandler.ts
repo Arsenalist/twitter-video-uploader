@@ -1,6 +1,7 @@
 import {getVideoDurationInSeconds} from 'get-video-duration'
 import {SocketServerWrapper} from "./socketServerWrapper";
 import {createThumbnailPath, createThumbnailPathFromWebRoot} from "./videoFilePaths";
+import {videoInfoRequest} from "./socketMessage";
 const fs = require('fs');
 
 function isFileNewEnough(newDetectedFile: string) {
@@ -27,11 +28,7 @@ export const fileDetectedHandler = async (newDetectedFile: string, wrapper: Sock
     try {
         let thumb = createThumbnailPath(web_client_dir, newDetectedFile);
         fs.copyFileSync(newDetectedFile, thumb)
-        wrapper.send(JSON.stringify({
-            action: "tweetRequest",
-            id: newDetectedFile,
-            thumb: createThumbnailPathFromWebRoot(thumb)
-        }))
+        wrapper.send(videoInfoRequest(newDetectedFile, createThumbnailPathFromWebRoot(thumb)))
         console.log("processed", newDetectedFile);
     } catch (e) {
         console.log("encountered an error processing file", newDetectedFile, e);
