@@ -27,6 +27,6 @@ const watchFolder = () => {
 })};
 
 if (require.main === module) {
-  watchFolder();
   startSocketServer();
+  watchFolder();
 }
