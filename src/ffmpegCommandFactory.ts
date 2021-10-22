@@ -11,16 +11,16 @@ export class FfmpegCommandFactory {
             if (in_point >= out_point) {
                 return trim
             }
-            trim = `${this.ffmpegBinary} -i ${in_file} -ss ${in_point} -to ${out_point} ${out_file}`
+            trim = `${this.ffmpegBinary} -y -i ${in_file} -ss ${in_point} -to ${out_point} ${out_file}`
         } else if (in_point) {
-            trim = `${this.ffmpegBinary} -i ${in_file} -ss ${in_point} ${out_file}`
+            trim = `${this.ffmpegBinary} -y -i ${in_file} -ss ${in_point} ${out_file}`
         } else if (out_point) {
-            trim = `${this.ffmpegBinary} -i ${in_file} -to ${out_point} ${out_file}`
+            trim = `${this.ffmpegBinary} -y -i ${in_file} -to ${out_point} ${out_file}`
         }
         return trim;
     }
 
     createStripAudioCommand = (out_file: string, out_file_no_audio: string) => {
-        return `${this.ffmpegBinary} -i ${out_file} -c copy -an ${out_file_no_audio}`;
+        return `${this.ffmpegBinary} -y -i ${out_file} -c copy -an ${out_file_no_audio}`;
     }
 }
