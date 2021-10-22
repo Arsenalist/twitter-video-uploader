@@ -12,7 +12,6 @@ function isFileNewEnough(newDetectedFile: string) {
 export const fileDetectedHandler = async (newDetectedFile: string, wrapper: SocketServerWrapper, web_client_dir: string) => {
     console.log("new file found", newDetectedFile);
     let completeFile = false
-    let newEnough = false
     try {
         // this call fails if the file is being written to which is what we want as we don't want
         // to process incomplete files
@@ -21,7 +20,7 @@ export const fileDetectedHandler = async (newDetectedFile: string, wrapper: Sock
     } catch (e) {
         console.log("incomplete file found, skipping", newDetectedFile);
     }
-    newEnough = isFileNewEnough(newDetectedFile);
+    const newEnough = isFileNewEnough(newDetectedFile);
     if (!completeFile || !newEnough) {
         return;
     }
