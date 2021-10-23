@@ -44,11 +44,16 @@ export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
         const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
         const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
         saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
-        new VideoTweet(appConfig.twitter, {
-            file_path: out_file,
-            tweet_text: videoSaveRequest.text
-        });
-        socketServerWrapper.send(infoMessage(`Tweeted file ${path.basename(out_file)}`));
+        try {
+            new VideoTweet(appConfig.twitter, {
+                file_path: out_file,
+                tweet_text: videoSaveRequest.text
+            });
+            socketServerWrapper.send(infoMessage(`Tweeted file ${path.basename(out_file)}`));
+        } catch (e) {
+            console.log("error tweeting file")
+            socketServerWrapper.send(infoMessage(`Failed to tweet ${path.basename(out_file)}`));
+        }
         deleteThumbnail(videoSaveRequest.id)
     }, 0);
 }
@@ -59,10 +64,15 @@ export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) =
         const out_file_no_audio = createOutputPath(appConfig.output_noaudio_dir, videoSaveRequest)
         const out_file = createOutputPath(appConfig.output_dir, videoSaveRequest)
         saveWithNiceName(ffmpeg, out_file_no_audio, out_file, videoSaveRequest);
-        await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
-            deleteThumbnail(videoSaveRequest.id)
-        })
-        socketServerWrapper.send(infoMessage(`Uploaded to YouTube ${path.basename(out_file)}`));
+        try {
+            await uploadToYouTube(appConfig.youtube, out_file, videoSaveRequest.text).then(() => {
+                deleteThumbnail(videoSaveRequest.id)
+            })
+            socketServerWrapper.send(infoMessage(`Uploaded to YouTube ${path.basename(out_file)}`));
+        } catch (e) {
+            console.log("error sending to YouTube")
+            socketServerWrapper.send(infoMessage(`Failed to send to YouTube ${path.basename(out_file)}`));
+        }
     }, 0);
 }
 
