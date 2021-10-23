@@ -51,7 +51,7 @@ export const saveAndSendTweet = (videoSaveRequest: VideoSaveRequest) => {
             });
             socketServerWrapper.send(infoMessage(`Tweeted file ${path.basename(out_file)}`));
         } catch (e) {
-            console.log("error tweeting file")
+            console.log("error tweeting file", e);
             socketServerWrapper.send(infoMessage(`Failed to tweet ${path.basename(out_file)}`));
         }
         deleteThumbnail(videoSaveRequest.id)
@@ -70,7 +70,7 @@ export const saveAndSendToYouTube = async (videoSaveRequest: VideoSaveRequest) =
             })
             socketServerWrapper.send(infoMessage(`Uploaded to YouTube ${path.basename(out_file)}`));
         } catch (e) {
-            console.log("error sending to YouTube")
+            console.log("error sending to YouTube", e);
             socketServerWrapper.send(infoMessage(`Failed to send to YouTube ${path.basename(out_file)}`));
         }
     }, 0);
